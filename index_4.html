@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The $1,500 Lesson</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-red: #dc3545;
+            --primary-green: #198754;
+            --warning-orange: #fd7e14;
+            --info-blue: #0d6efd;
+            --bg-light: #f8f9fa;
+            --bg-white: #ffffff;
+            --card-border: #dee2e6;
+            --text-dark: #212529;
+            --text-muted: #6c757d;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, #fff 0%, #f0f4f8 100%);
+            border-bottom: 4px solid var(--primary-red);
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 { font-size: 2.2rem; margin-bottom: 0.5rem; color: var(--text-dark); }
+        .header h1 span { color: var(--primary-red); }
+        .header .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 1rem; }
+
+        .header .tough-love {
+            font-style: italic;
+            color: #856404;
+            background: #fff3cd;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            max-width: 700px;
+            margin: 0 auto;
+            border: 1px solid #ffc107;
+        }
+
+        /* Balance Display */
+        .balance-display {
+            background: var(--bg-white);
+            border: 2px solid var(--primary-red);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem auto;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+        }
+
+        .balance-display .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .balance-display .amount { font-size: 2.8rem; font-weight: 700; color: var(--primary-red); }
+
+        .balance-display .card-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .balance-display .card-info strong { color: var(--text-dark); }
+
+        /* APR Details - Collapsible */
+        .apr-details { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--card-border); }
+
+        .apr-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem;
+            background: var(--bg-light);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .apr-toggle:hover { background: #e9ecef; }
+        .apr-toggle .apr-summary { display: flex; align-items: center; gap: 0.5rem; }
+        .apr-toggle .apr-value { font-weight: 600; color: var(--warning-orange); }
+        .apr-toggle .toggle-icon { transition: transform 0.2s; }
+        .apr-toggle.expanded .toggle-icon { transform: rotate(180deg); }
+
+        .apr-control { display: none; padding: 1rem 0.5rem 0.5rem; }
+        .apr-control.visible { display: block; }
+
+        .apr-control label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .apr-control .apr-display { font-weight: 600; color: var(--warning-orange); }
+
+        .apr-control .apr-note {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e9ecef;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--warning-orange);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .apr-penalty-warning {
+            background: #f8d7da;
+            border: 1px solid #f5c2c7;
+            color: #842029;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .apr-penalty-warning.active { display: block; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--card-border);
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover { color: var(--text-dark); }
+        .tab-btn.active { color: var(--info-blue); border-bottom-color: var(--info-blue); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) { .dashboard { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .dashboard { grid-template-columns: repeat(3, 1fr); } }
+
+        .card {
+            background: var(--bg-white);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            font-size: 1rem;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--bg-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Payment Control Panel */
+        .minimum-payment {
+            background: #fff5f5;
+            border: 1px solid #f5c2c7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .minimum-payment .label { font-size: 0.8rem; color: var(--text-muted); }
+        .minimum-payment .value { font-size: 1.6rem; font-weight: 700; color: var(--primary-red); }
+        .minimum-payment .note { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+        .danger-warning {
+            background: #f8d7da;
+            border: 1px solid #f5c2c7;
+            color: #842029;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .danger-warning.active { display: block; }
+
+        .extra-payment { margin-bottom: 1rem; }
+        .extra-payment label { display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 500; font-size: 0.9rem; }
+
+        .extra-payment-input { display: flex; align-items: center; gap: 0.5rem; }
+        .extra-payment-input span { font-size: 1.3rem; color: var(--primary-green); font-weight: 600; }
+
+        .extra-payment-input input {
+            flex: 1;
+            padding: 0.75rem;
+            font-size: 1.1rem;
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            background: #f8fff8;
+            color: var(--text-dark);
+            width: 100%;
+        }
+
+        .total-payment {
+            background: #d1e7dd;
+            border: 1px solid #badbcc;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .total-payment .label { font-size: 0.8rem; color: #0f5132; }
+        .total-payment .value { font-size: 1.6rem; font-weight: 700; color: var(--primary-green); }
+
+        .frequency-toggle { margin-bottom: 1rem; }
+        .frequency-toggle label { display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 500; font-size: 0.9rem; }
+
+        .toggle-buttons { display: flex; gap: 0.5rem; }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 0.6rem;
+            border: 2px solid var(--card-border);
+            background: var(--bg-white);
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .toggle-btn.active { border-color: var(--info-blue); background: #e7f1ff; color: var(--info-blue); }
+
+        .miss-payment-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, var(--primary-red), #b02a37);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .miss-payment-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3); }
+
+        .make-payment-link {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            color: var(--primary-green);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .make-payment-link:hover {
+            background: #d1e7dd;
+        }
+
+        .apply-plan-btn {
+            width: 100%;
+            padding: 0.6rem;
+            background: var(--info-blue);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .apply-plan-btn:hover {
+            background: #0b5ed7;
+        }
+
+        /* Stats */
+        .stat-grid { display: grid; gap: 0.75rem; }
+
+        .stat-item { background: var(--bg-light); border-radius: 8px; padding: 1rem; text-align: center; }
+        .stat-item .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-item .value { font-size: 1.5rem; font-weight: 700; margin: 0.25rem 0; }
+        .stat-item .subtext { font-size: 0.75rem; color: var(--text-muted); }
+        .stat-item.warning .value { color: var(--primary-red); }
+        .stat-item.success .value { color: var(--primary-green); }
+        .stat-item.info .value { color: var(--info-blue); }
+
+        .cost-multiplier {
+            background: linear-gradient(135deg, #fff3cd, #ffe69c);
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            margin-top: 0.75rem;
+        }
+
+        .cost-multiplier .headline { font-size: 0.85rem; color: #664d03; }
+        .cost-multiplier .amount { font-size: 1.5rem; font-weight: 700; color: #664d03; }
+
+        /* Comparison Scenarios */
+        .scenario-bars { display: flex; flex-direction: column; gap: 1rem; }
+        .scenario { background: var(--bg-light); border-radius: 8px; padding: 1rem; }
+        .scenario-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .scenario-name { font-weight: 600; font-size: 0.85rem; }
+        .scenario-name.minimum { color: var(--primary-red); }
+        .scenario-name.current { color: var(--info-blue); }
+        .scenario-name.aggressive { color: var(--primary-green); }
+        .scenario-payment { font-size: 0.8rem; color: var(--text-muted); }
+
+        .scenario-bar-container { height: 24px; background: #e9ecef; border-radius: 4px; overflow: hidden; }
+
+        .scenario-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        .scenario-bar.minimum { background: linear-gradient(90deg, var(--primary-red), #e66a77); }
+        .scenario-bar.current { background: linear-gradient(90deg, var(--info-blue), #5a9cfc); }
+        .scenario-bar.aggressive { background: linear-gradient(90deg, var(--primary-green), #3da874); }
+
+        .scenario-stats { display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted); }
+        .scenario-stats .interest { color: var(--primary-red); font-weight: 500; }
+
+        /* Visualization */
+        .viz-card {
+            background: var(--bg-white);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .viz-card h3 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-dark); }
+        .chart-container { position: relative; height: 280px; width: 100%; }
+        @media (min-width: 768px) { .chart-container { height: 320px; } }
+
+        /* Timeline */
+        .timeline-container { margin-top: 1rem; }
+        .timeline-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
+
+        .timeline-bar { height: 36px; background: #e9ecef; border-radius: 8px; overflow: hidden; display: flex; }
+
+        .timeline-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            transition: width 0.5s ease;
+        }
+
+        .timeline-segment.principal { background: linear-gradient(90deg, var(--primary-green), #3da874); }
+        .timeline-segment.interest { background: linear-gradient(90deg, var(--primary-red), #e66a77); }
+
+        .timeline-labels { display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted); }
+        .timeline-legend { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+        .legend-color { width: 16px; height: 16px; border-radius: 4px; }
+        .legend-color.principal { background: var(--primary-green); }
+        .legend-color.interest { background: var(--primary-red); }
+
+        /* What If Section */
+        .what-if-section {
+            background: var(--bg-white);
+            border: 2px solid var(--info-blue);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .what-if-section h2 { color: var(--info-blue); margin-bottom: 1rem; font-size: 1.2rem; }
+
+        .what-if-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        @media (min-width: 768px) { .what-if-grid { grid-template-columns: repeat(3, 1fr); } }
+
+        .what-if-card { background: var(--bg-light); border-radius: 8px; padding: 1rem; }
+        .what-if-card h4 { font-size: 0.85rem; color: var(--text-dark); margin-bottom: 0.75rem; }
+
+        .what-if-input { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+
+        .what-if-input input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+
+        /* What If Summary */
+        .what-if-summary { background: var(--bg-white); border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; }
+
+        .what-if-summary .summary-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0; }
+        .what-if-summary .summary-row .label { color: var(--text-muted); }
+        .what-if-summary .summary-row .value { font-weight: 600; }
+
+        .what-if-summary .summary-row.highlight { border-top: 1px solid var(--card-border); margin-top: 0.25rem; padding-top: 0.5rem; }
+        .what-if-summary .summary-row.highlight .value.good { color: var(--primary-green); }
+        .what-if-summary .summary-row.highlight .value.bad { color: var(--primary-red); }
+
+        /* Simple What If Bars */
+        .what-if-bars { background: var(--bg-white); border-radius: 6px; padding: 0.75rem; }
+
+        .wi-bar-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+        .wi-bar-row:last-child { margin-bottom: 0; }
+
+        .wi-bar-label { width: 70px; font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0; }
+
+        .wi-bar-track { flex: 1; height: 24px; background: #e9ecef; border-radius: 4px; overflow: hidden; }
+
+        .wi-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            justify-content: flex-end;
+            transition: width 0.3s ease;
+            min-width: 60px;
+        }
+
+        .wi-bar-fill.current { background: #adb5bd; }
+        .wi-bar-fill.better { background: var(--primary-green); }
+        .wi-bar-fill.worse { background: var(--primary-red); }
+
+        .wi-bar-fill .bar-text { font-size: 0.75rem; font-weight: 600; color: white; white-space: nowrap; }
+
+        /* Ledger Tab */
+        .ledger-section { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 768px) { .ledger-section { grid-template-columns: 350px 1fr; } }
+
+        .ledger-form {
+            background: var(--bg-white);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+
+        .ledger-form h3 { margin-bottom: 1rem; color: var(--text-dark); }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+        .form-group input, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid var(--card-border); border-radius: 6px; font-size: 1rem; }
+
+        .add-payment-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--primary-green);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .add-payment-btn:hover { background: #157347; }
+
+        .ledger-table-container {
+            background: var(--bg-white);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        .ledger-table-container h3 { margin-bottom: 1rem; }
+
+        .ledger-summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        @media (min-width: 768px) { .ledger-summary { grid-template-columns: repeat(4, 1fr); } }
+
+        .summary-item { background: var(--bg-light); padding: 1rem; border-radius: 8px; text-align: center; }
+        .summary-item .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+        .summary-item .value { font-size: 1.3rem; font-weight: 700; }
+        .summary-item.balance .value { color: var(--primary-red); }
+        .summary-item.paid .value { color: var(--primary-green); }
+        .summary-item.interest .value { color: var(--warning-orange); }
+        .summary-item.payments .value { color: var(--info-blue); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--card-border); }
+        th { background: var(--bg-light); font-weight: 600; color: var(--text-dark); }
+        tr:hover { background: #f8f9fa; }
+        .amount-positive { color: var(--primary-green); font-weight: 500; }
+        .amount-negative { color: var(--primary-red); font-weight: 500; }
+
+        .delete-btn {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: var(--primary-red);
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover { background: #fecaca; }
+
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+
+        /* Footer */
+        .lesson-footer {
+            background: linear-gradient(135deg, #fff, #f0f4f8);
+            border-top: 3px solid var(--primary-green);
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+
+        .motivational-counter { max-width: 600px; margin: 0 auto; }
+        .motivational-counter h3 { color: var(--primary-green); font-size: 1.1rem; margin-bottom: 1rem; }
+
+        .savings-highlight { background: #d1e7dd; border: 2px solid var(--primary-green); border-radius: 12px; padding: 1.25rem; }
+        .savings-highlight p { font-size: 1rem; color: var(--text-dark); margin-bottom: 0.25rem; }
+        .savings-highlight .highlight { color: var(--primary-green); font-weight: 700; font-size: 1.2rem; }
+
+        .final-thought { margin-top: 1.5rem; font-style: italic; color: var(--text-muted); font-size: 0.95rem; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--bg-white);
+            border: 2px solid var(--primary-red);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal h3 { color: var(--primary-red); margin-bottom: 1rem; }
+        .modal p { color: var(--text-muted); margin-bottom: 1rem; }
+
+        .modal .penalty-breakdown { background: var(--bg-light); border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+
+        .penalty-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--card-border); }
+        .penalty-item:last-child { border-bottom: none; font-weight: 700; color: var(--primary-red); }
+
+        .modal-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #664d03;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .modal-buttons { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .modal-btn { flex: 1; padding: 0.75rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 500; cursor: pointer; }
+        .modal-btn.confirm { background: var(--primary-red); color: white; }
+        .modal-btn.cancel { background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--card-border); }
+
+        .missed-indicator {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.85rem;
+        }
+
+        .missed-indicator.active { display: block; }
+        .missed-indicator .count { font-weight: 700; color: var(--primary-red); }
+
+        .reset-btn {
+            margin-top: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--card-border);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-dark);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>The <span>$1,500</span> Lesson</h1>
+        <p class="subtitle">A Credit Card Reality Check</p>
+        <p class="tough-love">💡 "Using Mom's emergency credit card without permission wasn't just a mistake—it was a breach of trust. This tool shows what it really costs to make this right."</p>
+        
+        <div class="balance-display">
+            <div class="label">Current Balance Owed</div>
+            <div class="amount" id="currentBalance">$1,500</div>
+            <div class="card-info">
+                <strong>Card:</strong> Emergency Credit Card &nbsp;|&nbsp; <strong>APR:</strong> <span id="aprDisplayInline">23%</span>
+            </div>
+            
+            <div class="apr-details">
+                <div class="apr-toggle" id="aprToggle">
+                    <div class="apr-summary">
+                        <span>⚙️ Card Settings</span>
+                        <span class="apr-value" id="aprToggleValue">(23% APR)</span>
+                    </div>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="apr-control" id="aprControl">
+                    <label>
+                        <span>Adjust APR (if negotiated with Mom)</span>
+                        <span class="apr-display" id="aprDisplay">23%</span>
+                    </label>
+                    <input type="range" id="aprSlider" min="12" max="30" value="23" step="0.5">
+                    <div class="apr-note">💬 Some cards allow balance transfers or rate negotiations. This is Mom's call, not yours.</div>
+                </div>
+                <div class="apr-penalty-warning" id="aprPenaltyWarning">
+                    ⚠️ Penalty APR Active: 3 consecutive missed payments triggered a rate increase!
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="simulator">📊 Payment Simulator</button>
+            <button class="tab-btn" data-tab="ledger">📒 Payments History</button>
+        </div>
+
+        <!-- Simulator Tab -->
+        <div class="tab-content active" id="simulator-tab">
+            <!-- Dashboard -->
+            <div class="dashboard">
+                <!-- Column 1: Payment Control Panel -->
+                <div class="card">
+                    <h2>💳 Payment Control Panel</h2>
+                    
+                    <div class="minimum-payment">
+                        <div class="label">Minimum Payment Required</div>
+                        <div class="value" id="minimumPayment">$30</div>
+                        <div class="note">Greater of $25 or 2% of balance</div>
+                        <div class="danger-warning" id="dangerWarning">
+                            ⚠️ <strong>Warning:</strong> At this APR, the minimum payment barely covers interest!
+                        </div>
+                    </div>
+
+                    <div class="extra-payment">
+                        <label>Extra Payment (Above Minimum)</label>
+                        <div class="extra-payment-input">
+                            <span>+$</span>
+                            <input type="number" id="extraPayment" value="0" min="0" step="5">
+                        </div>
+                    </div>
+
+                    <div class="total-payment">
+                        <div class="label">Your Total Monthly Payment</div>
+                        <div class="value" id="totalPayment">$30</div>
+                    </div>
+
+                    <div class="frequency-toggle">
+                        <label>Payment Frequency</label>
+                        <div class="toggle-buttons">
+                            <button class="toggle-btn active" data-frequency="monthly">Monthly</button>
+                            <button class="toggle-btn" data-frequency="biweekly">Bi-Weekly</button>
+                        </div>
+                    </div>
+
+                    <button class="miss-payment-btn" id="missPaymentBtn">⚠️ What If I Miss a Payment?</button>
+                    
+                    <button class="make-payment-link" id="makePaymentLink">💵 Record a Payment →</button>
+
+                    <div class="missed-indicator" id="missedIndicator">
+                        <div>Simulated Missed Payments: <span class="count" id="missedCount">0</span></div>
+                        <div id="missedWarning" style="margin-top: 0.25rem; color: #856404;"></div>
+                        <button class="reset-btn" id="resetMissed">Reset Simulation</button>
+                    </div>
+                </div>
+
+                <!-- Column 2: The Numbers -->
+                <div class="card">
+                    <h2>📊 The Numbers (Your Current Plan)</h2>
+                    
+                    <div class="stat-grid">
+                        <div class="stat-item info">
+                            <div class="label">Time to Pay Off</div>
+                            <div class="value" id="monthsToPayoff">72</div>
+                            <div class="subtext" id="payoffDate">months (Aug 2031)</div>
+                        </div>
+                        
+                        <div class="stat-item warning">
+                            <div class="label">Total You'll Pay</div>
+                            <div class="value" id="totalAmountPaid">$2,160</div>
+                            <div class="subtext">for that original $1,500</div>
+                        </div>
+                        
+                        <div class="stat-item warning">
+                            <div class="label">Total Interest</div>
+                            <div class="value" id="totalInterest">$660</div>
+                            <div class="subtext">pure profit for the bank</div>
+                        </div>
+                    </div>
+
+                    <div class="cost-multiplier">
+                        <div class="headline">That $1,500 will actually cost you</div>
+                        <div class="amount" id="costMultiplier">$2,160 (1.44×)</div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Comparison Scenarios -->
+                <div class="card">
+                    <h2>⚖️ Compare Payment Strategies</h2>
+                    
+                    <div class="scenario-bars">
+                        <div class="scenario">
+                            <div class="scenario-header">
+                                <span class="scenario-name minimum">😰 Minimum Only</span>
+                                <span class="scenario-payment" id="minOnlyPayment">~$25-30/mo</span>
+                            </div>
+                            <div class="scenario-bar-container">
+                                <div class="scenario-bar minimum" id="minOnlyBar" style="width: 100%"></div>
+                            </div>
+                            <div class="scenario-stats">
+                                <span id="minOnlyMonths">94 months</span>
+                                <span class="interest" id="minOnlyInterest">$858 interest</span>
+                            </div>
+                        </div>
+
+                        <div class="scenario">
+                            <div class="scenario-header">
+                                <span class="scenario-name current">📍 Your Current Plan</span>
+                                <span class="scenario-payment" id="currentPlanPayment">$30/mo</span>
+                            </div>
+                            <div class="scenario-bar-container">
+                                <div class="scenario-bar current" id="currentPlanBar" style="width: 75%"></div>
+                            </div>
+                            <div class="scenario-stats">
+                                <span id="currentPlanMonths">72 months</span>
+                                <span class="interest" id="currentPlanInterest">$660 interest</span>
+                            </div>
+                        </div>
+
+                        <div class="scenario">
+                            <div class="scenario-header">
+                                <span class="scenario-name aggressive">🚀 Aggressive ($100/mo)</span>
+                                <span class="scenario-payment">$100/mo</span>
+                            </div>
+                            <div class="scenario-bar-container">
+                                <div class="scenario-bar aggressive" id="aggressiveBar" style="width: 25%"></div>
+                            </div>
+                            <div class="scenario-stats">
+                                <span id="aggressiveMonths">17 months</span>
+                                <span class="interest" id="aggressiveInterest">$198 interest</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualizations -->
+            <div class="visualizations">
+                <div class="viz-card">
+                    <h3>📅 Payoff Timeline</h3>
+                    <div class="timeline-container">
+                        <div class="timeline-header">
+                            <span id="timelineStart">Jan 2025</span>
+                            <span id="timelineEnd">Dec 2030</span>
+                        </div>
+                        <div class="timeline-bar">
+                            <div class="timeline-segment principal" id="timelinePrincipal" style="width: 70%">$1,500</div>
+                            <div class="timeline-segment interest" id="timelineInterest" style="width: 30%">$660</div>
+                        </div>
+                        <div class="timeline-labels">
+                            <span id="timelineMidpoint">Halfway: Month 36</span>
+                            <span id="timelinePayoffDate">Paid off: Aug 2031</span>
+                        </div>
+                    </div>
+                    <div class="timeline-legend">
+                        <div class="legend-item"><div class="legend-color principal"></div><span>Principal ($1,500)</span></div>
+                        <div class="legend-item"><div class="legend-color interest"></div><span>Interest Paid</span></div>
+                    </div>
+                </div>
+
+                <div class="viz-card">
+                    <h3>📈 Monthly Payment Breakdown</h3>
+                    <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+                </div>
+
+                <div class="viz-card">
+                    <h3>💸 Cumulative Cost Over Time</h3>
+                    <div class="chart-container"><canvas id="cumulativeChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- What If Section -->
+            <div class="what-if-section">
+                <h2>🔮 What If Scenarios</h2>
+                
+                <div class="what-if-grid">
+                    <!-- Pay More -->
+                    <div class="what-if-card">
+                        <h4>💪 What if I paid more per month?</h4>
+                        <div class="what-if-input">
+                            <span>Monthly payment: $</span>
+                            <input type="number" id="whatIfPayment" value="30" min="25" step="5">
+                        </div>
+                        
+                        <div class="what-if-summary">
+                            <div class="summary-row">
+                                <span class="label">Minimum required:</span>
+                                <span class="value" id="wiPayMoreMinPmt">$30/mo</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="label">Current plan payoff:</span>
+                                <span class="value" id="wiPayMoreCurrentMonths">72 mo, $660 int</span>
+                            </div>
+                            <div class="summary-row" style="border-top: 1px dashed #dee2e6; margin-top: 0.25rem; padding-top: 0.25rem;">
+                                <span class="label">New plan payoff:</span>
+                                <span class="value" id="wiPayMoreNewMonths">38 mo, $320 int</span>
+                            </div>
+                            <div class="summary-row highlight">
+                                <span class="label">You'd save:</span>
+                                <span class="value good" id="wiPayMoreSavings">$340 + 34 months</span>
+                            </div>
+                        </div>
+
+                        <div class="what-if-bars">
+                            <div class="wi-bar-row">
+                                <span class="wi-bar-label">Current</span>
+                                <div class="wi-bar-track">
+                                    <div class="wi-bar-fill current" id="wiPayMoreBarCurrent" style="width: 100%">
+                                        <span class="bar-text" id="wiPayMoreBarCurrentText">72 mo</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="wi-bar-row">
+                                <span class="wi-bar-label">New plan</span>
+                                <div class="wi-bar-track">
+                                    <div class="wi-bar-fill better" id="wiPayMoreBarNew" style="width: 53%">
+                                        <span class="bar-text" id="wiPayMoreBarNewText">38 mo</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="apply-plan-btn" id="applyPlanBtn">✓ Apply This Plan</button>
+                    </div>
+
+                    <!-- Skip Payment -->
+                    <div class="what-if-card">
+                        <h4>😬 What if I skip payment(s)?</h4>
+                        <div class="what-if-input">
+                            <span>Skip</span>
+                            <input type="number" id="whatIfSkip" value="1" min="1" max="6" step="1">
+                            <span>month(s)</span>
+                        </div>
+                        
+                        <div class="what-if-summary">
+                            <div class="summary-row">
+                                <span class="label">Late fees ($35 each):</span>
+                                <span class="value" style="color: var(--primary-red);" id="wiSkipFees">$35</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="label">Interest during skip:</span>
+                                <span class="value" style="color: var(--primary-red);" id="wiSkipInterestDuring">$29</span>
+                            </div>
+                            <div class="summary-row" style="border-top: 1px dashed #dee2e6; margin-top: 0.25rem; padding-top: 0.25rem;">
+                                <span class="label">Current balance:</span>
+                                <span class="value" id="wiSkipCurrentInt">$1,500</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="label">New balance:</span>
+                                <span class="value" style="color: var(--primary-red);" id="wiSkipNewInt">$1,564</span>
+                            </div>
+                            <div class="summary-row highlight">
+                                <span class="label">Added to debt:</span>
+                                <span class="value bad" id="wiSkipExtraCost">+$64</span>
+                            </div>
+                        </div>
+
+                        <div class="what-if-bars">
+                            <div class="wi-bar-row">
+                                <span class="wi-bar-label">Current</span>
+                                <div class="wi-bar-track">
+                                    <div class="wi-bar-fill current" id="wiSkipBarCurrent" style="width: 90%">
+                                        <span class="bar-text" id="wiSkipBarCurrentText">$1,500</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="wi-bar-row">
+                                <span class="wi-bar-label">After skip</span>
+                                <div class="wi-bar-track">
+                                    <div class="wi-bar-fill worse" id="wiSkipBarNew" style="width: 100%">
+                                        <span class="bar-text" id="wiSkipBarNewText">$1,564</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- APR Change -->
+                    <div class="what-if-card">
+                        <h4>📈 What if APR increases?</h4>
+                        <div class="what-if-input">
+                            <span>APR:</span>
+                            <input type="number" id="whatIfAPR" value="29" min="12" max="35" step="0.5">
+                            <span>%</span>
+                        </div>
+                        
+                        <div class="what-if-summary">
+                            <div class="summary-row">
+                                <span class="label">Current APR:</span>
+                                <span class="value" id="wiAPRCurrent">23%</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="label">Current interest:</span>
+                                <span class="value" id="wiAPRCurrentInt">$660</span>
+                            </div>
+                            <div class="summary-row" style="border-top: 1px dashed #dee2e6; margin-top: 0.25rem; padding-top: 0.25rem;">
+                                <span class="label">New total interest:</span>
+                                <span class="value" style="color: var(--primary-red);" id="wiAPRNewInterest">$840</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="label">New payoff time:</span>
+                                <span class="value" id="wiAPRNewMonths">80 months</span>
+                            </div>
+                            <div class="summary-row highlight">
+                                <span class="label">Extra cost:</span>
+                                <span class="value bad" id="wiAPRExtraCost">+$180 + 8 months</span>
+                            </div>
+                        </div>
+
+                        <div class="what-if-bars">
+                            <div class="wi-bar-row">
+                                <span class="wi-bar-label">Current</span>
+                                <div class="wi-bar-track">
+                                    <div class="wi-bar-fill current" id="wiAPRBarCurrent" style="width: 78%">
+                                        <span class="bar-text" id="wiAPRBarCurrentText">$660 interest</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="wi-bar-row">
+                                <span class="wi-bar-label">Higher APR</span>
+                                <div class="wi-bar-track">
+                                    <div class="wi-bar-fill worse" id="wiAPRBarNew" style="width: 100%">
+                                        <span class="bar-text" id="wiAPRBarNewText">$840 interest</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ledger Tab -->
+        <div class="tab-content" id="ledger-tab">
+            <div class="ledger-section">
+                <div class="ledger-form">
+                    <h3>➕ Record a Payment</h3>
+                    
+                    <div class="form-group">
+                        <label for="paymentDate">Payment Date</label>
+                        <input type="date" id="paymentDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="paymentAmount">Amount Paid ($)</label>
+                        <input type="number" id="paymentAmount" min="0" step="0.01" placeholder="Enter amount">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="paymentType">Payment Type</label>
+                        <select id="paymentType">
+                            <option value="regular">Regular Payment</option>
+                            <option value="extra">Extra Payment</option>
+                            <option value="minimum">Minimum Payment</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="paymentNote">Note (optional)</label>
+                        <input type="text" id="paymentNote" placeholder="e.g., Birthday money">
+                    </div>
+                    
+                    <button class="add-payment-btn" id="addPaymentBtn">Add Payment</button>
+                </div>
+
+                <div class="ledger-table-container">
+                    <h3>📒 Payment History</h3>
+                    
+                    <div class="ledger-summary">
+                        <div class="summary-item balance">
+                            <div class="label">Remaining Balance</div>
+                            <div class="value" id="ledgerBalance">$1,500.00</div>
+                        </div>
+                        <div class="summary-item paid">
+                            <div class="label">Total Paid</div>
+                            <div class="value" id="ledgerTotalPaid">$0.00</div>
+                        </div>
+                        <div class="summary-item interest">
+                            <div class="label">Interest Accrued</div>
+                            <div class="value" id="ledgerInterest">$0.00</div>
+                        </div>
+                        <div class="summary-item payments">
+                            <div class="label"># Payments</div>
+                            <div class="value" id="ledgerPaymentCount">0</div>
+                        </div>
+                    </div>
+
+                    <div id="ledgerTableWrapper">
+                        <div class="empty-state" id="emptyState">
+                            <p>📝 No payments recorded yet.</p>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Add your first payment to start tracking progress!</p>
+                        </div>
+                        <table id="ledgerTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Principal</th>
+                                    <th>Interest</th>
+                                    <th>Balance</th>
+                                    <th>Note</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="lesson-footer">
+        <div class="motivational-counter">
+            <h3>💡 The Power of Extra Payments</h3>
+            <div class="savings-highlight">
+                <p>Every extra <span class="highlight">$10/month</span> saves you:</p>
+                <p><span class="highlight" id="extraTenSavings">$127</span> in interest and <span class="highlight" id="extraTenMonths">12</span> months of payments</p>
+            </div>
+            <p class="final-thought">"Trust is earned back through actions, not words. Every payment is a step toward making this right."</p>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="missPaymentModal">
+        <div class="modal">
+            <h3>⚠️ Missing a Payment Has Consequences</h3>
+            <p>Life happens, but credit card companies don't care. Here's what missing a payment costs:</p>
+            
+            <div class="penalty-breakdown">
+                <div class="penalty-item"><span>Late Fee</span><span>$35.00</span></div>
+                <div class="penalty-item"><span>Interest Still Accrues</span><span id="modalInterest">~$29.00</span></div>
+                <div class="penalty-item"><span>Added to Balance</span><span id="modalAddedBalance">$64.00</span></div>
+            </div>
+            
+            <div class="modal-warning" id="modalWarning">⚠️ 3 consecutive missed payments will trigger a penalty APR of 29.99%!</div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="modalCancel">I'll Make My Payment</button>
+                <button class="modal-btn confirm" id="modalConfirm">Simulate Missing It</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ STATE ============
+        const ORIGINAL_BALANCE = 1500;
+        const LATE_FEE = 35;
+        const PENALTY_APR = 29.99;
+
+        let state = {
+            currentBalance: ORIGINAL_BALANCE,
+            apr: 23,
+            baseApr: 23,
+            extraPayment: 0,
+            frequency: 'monthly',
+            missedPayments: 0,
+            consecutiveMissed: 0,
+            penaltyAprActive: false
+        };
+
+        let ledger = {
+            payments: [],
+            startingBalance: ORIGINAL_BALANCE,
+            currentBalance: ORIGINAL_BALANCE,
+            totalPaid: 0,
+            totalInterest: 0
+        };
+
+        let monthlyChart, cumulativeChart;
+
+        // ============ HELPERS ============
+        function formatCurrency(amount) { return '$' + Math.round(amount).toLocaleString('en-US'); }
+        function formatCurrencyDecimal(amount) { return '$' + amount.toFixed(2); }
+        function formatDate(monthsFromNow) {
+            const date = new Date();
+            date.setMonth(date.getMonth() + monthsFromNow);
+            return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        }
+
+        function calculateMinimumPayment(balance) { return Math.max(25, Math.ceil(balance * 0.02)); }
+        function calculateMonthlyInterest(balance, apr) { return balance * (apr / 100 / 12); }
+
+        function calculateAmortization(balance, apr, monthlyPayment, frequency = 'monthly') {
+            if (balance <= 0) return { schedule: [], totalPeriods: 0, totalPaid: 0, totalInterest: 0, periodsPerYear: 12 };
+            
+            const schedule = [];
+            let remainingBalance = balance;
+            const periodsPerYear = frequency === 'biweekly' ? 26 : 12;
+            const periodicRate = apr / 100 / periodsPerYear;
+            let payment = frequency === 'biweekly' ? monthlyPayment / 2 : monthlyPayment;
+            let totalInterest = 0, totalPaid = 0, period = 0;
+            const maxPeriods = 360;
+
+            // Ensure payment is at least $25
+            payment = Math.max(payment, 25);
+
+            while (remainingBalance > 0.50 && period < maxPeriods) {
+                period++;
+                const interestCharge = remainingBalance * periodicRate;
+                
+                // Payment must cover interest + some principal
+                const actualPayment = Math.min(Math.max(payment, interestCharge + 1), remainingBalance + interestCharge);
+                const principalPayment = Math.max(0, actualPayment - interestCharge);
+                
+                remainingBalance = Math.max(0, remainingBalance - principalPayment);
+                totalInterest += interestCharge;
+                totalPaid += actualPayment;
+                
+                schedule.push({ 
+                    period, payment: actualPayment, principal: principalPayment, 
+                    interest: interestCharge, balance: remainingBalance, totalPaid, totalInterest 
+                });
+            }
+            return { schedule, totalPeriods: period, totalPaid, totalInterest, periodsPerYear };
+        }
+
+        // ============ DISPLAY ============
+        function updateDisplay() {
+            const minPayment = calculateMinimumPayment(state.currentBalance);
+            const totalMonthlyPayment = minPayment + state.extraPayment;
+            const monthlyInterest = calculateMonthlyInterest(state.currentBalance, state.apr);
+
+            document.getElementById('currentBalance').textContent = formatCurrency(state.currentBalance);
+            document.getElementById('minimumPayment').textContent = formatCurrency(minPayment);
+            document.getElementById('totalPayment').textContent = formatCurrency(totalMonthlyPayment);
+            document.getElementById('aprDisplay').textContent = state.apr + '%';
+            document.getElementById('aprDisplayInline').textContent = state.apr + '%';
+            document.getElementById('aprToggleValue').textContent = `(${state.apr}% APR)`;
+            document.getElementById('aprSlider').value = state.apr;
+
+            const dangerWarning = document.getElementById('dangerWarning');
+            dangerWarning.classList.toggle('active', minPayment < monthlyInterest * 1.1);
+
+            const currentPlan = calculateAmortization(state.currentBalance, state.apr, totalMonthlyPayment, state.frequency);
+            const monthsToPayoff = state.frequency === 'biweekly' ? Math.ceil(currentPlan.totalPeriods / 2.17) : currentPlan.totalPeriods;
+
+            document.getElementById('monthsToPayoff').textContent = monthsToPayoff;
+            document.getElementById('payoffDate').textContent = `months (${formatDate(monthsToPayoff)})`;
+            document.getElementById('totalAmountPaid').textContent = formatCurrency(currentPlan.totalPaid);
+            document.getElementById('totalInterest').textContent = formatCurrency(currentPlan.totalInterest);
+            document.getElementById('costMultiplier').textContent = `${formatCurrency(currentPlan.totalPaid)} (${(currentPlan.totalPaid / ORIGINAL_BALANCE).toFixed(2)}×)`;
+
+            updateComparisonScenarios(minPayment, totalMonthlyPayment);
+            updateTimeline(currentPlan, monthsToPayoff);
+            updateCharts(currentPlan);
+            updateWhatIfScenarios(totalMonthlyPayment, currentPlan);
+            updateFooter(totalMonthlyPayment, currentPlan);
+        }
+
+        function updateComparisonScenarios(minPayment, currentPayment) {
+            const minOnly = calculateAmortization(state.currentBalance, state.apr, minPayment, state.frequency);
+            const minOnlyMonths = state.frequency === 'biweekly' ? Math.ceil(minOnly.totalPeriods / 2.17) : minOnly.totalPeriods;
+            document.getElementById('minOnlyPayment').textContent = `~${formatCurrency(minPayment)}/mo`;
+            document.getElementById('minOnlyMonths').textContent = `${minOnlyMonths} months`;
+            document.getElementById('minOnlyInterest').textContent = `${formatCurrency(minOnly.totalInterest)} interest`;
+
+            const current = calculateAmortization(state.currentBalance, state.apr, currentPayment, state.frequency);
+            const currentMonths = state.frequency === 'biweekly' ? Math.ceil(current.totalPeriods / 2.17) : current.totalPeriods;
+            document.getElementById('currentPlanPayment').textContent = `${formatCurrency(currentPayment)}/mo`;
+            document.getElementById('currentPlanMonths').textContent = `${currentMonths} months`;
+            document.getElementById('currentPlanInterest').textContent = `${formatCurrency(current.totalInterest)} interest`;
+
+            const aggressive = calculateAmortization(state.currentBalance, state.apr, 100, state.frequency);
+            const aggressiveMonths = state.frequency === 'biweekly' ? Math.ceil(aggressive.totalPeriods / 2.17) : aggressive.totalPeriods;
+            document.getElementById('aggressiveMonths').textContent = `${aggressiveMonths} months`;
+            document.getElementById('aggressiveInterest').textContent = `${formatCurrency(aggressive.totalInterest)} interest`;
+
+            const maxMonths = Math.max(minOnlyMonths, currentMonths, aggressiveMonths);
+            document.getElementById('minOnlyBar').style.width = `${(minOnlyMonths / maxMonths) * 100}%`;
+            document.getElementById('currentPlanBar').style.width = `${(currentMonths / maxMonths) * 100}%`;
+            document.getElementById('aggressiveBar').style.width = `${(aggressiveMonths / maxMonths) * 100}%`;
+        }
+
+        function updateTimeline(plan, monthsToPayoff) {
+            document.getElementById('timelineStart').textContent = formatDate(0);
+            document.getElementById('timelineEnd').textContent = formatDate(monthsToPayoff);
+            const principalPct = (ORIGINAL_BALANCE / plan.totalPaid) * 100;
+            document.getElementById('timelinePrincipal').style.width = `${principalPct}%`;
+            document.getElementById('timelinePrincipal').textContent = formatCurrency(ORIGINAL_BALANCE);
+            document.getElementById('timelineInterest').style.width = `${100 - principalPct}%`;
+            document.getElementById('timelineInterest').textContent = formatCurrency(plan.totalInterest);
+            document.getElementById('timelineMidpoint').textContent = `Halfway: Month ${Math.ceil(monthsToPayoff / 2)}`;
+            document.getElementById('timelinePayoffDate').textContent = `Paid off: ${formatDate(monthsToPayoff)}`;
+        }
+
+        function updateCharts(plan) {
+            const schedule = plan.schedule;
+            if (schedule.length === 0) return;
+            const maxPoints = 30;
+            const step = Math.max(1, Math.ceil(schedule.length / maxPoints));
+            const labels = [], principalData = [], interestData = [], balanceData = [], cumPrin = [], cumInt = [];
+
+            for (let i = 0; i < schedule.length; i += step) {
+                const item = schedule[i];
+                labels.push(`Mo ${item.period}`);
+                principalData.push(item.principal);
+                interestData.push(item.interest);
+                balanceData.push(item.balance);
+                let cp = 0, ci = 0;
+                for (let j = 0; j <= i; j++) { cp += schedule[j].principal; ci += schedule[j].interest; }
+                cumPrin.push(cp); cumInt.push(ci);
+            }
+
+            if (monthlyChart) monthlyChart.destroy();
+            monthlyChart = new Chart(document.getElementById('monthlyChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Principal', data: principalData, backgroundColor: 'rgba(25, 135, 84, 0.8)', stack: 'payment' },
+                        { label: 'Interest', data: interestData, backgroundColor: 'rgba(220, 53, 69, 0.8)', stack: 'payment' },
+                        { label: 'Balance', data: balanceData, type: 'line', borderColor: '#fd7e14', backgroundColor: 'transparent', borderWidth: 3, pointRadius: 0, yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#6c757d' }, grid: { color: '#e9ecef' } },
+                        y: { stacked: true, ticks: { color: '#6c757d', callback: v => '$' + v }, grid: { color: '#e9ecef' } },
+                        y1: { position: 'right', ticks: { color: '#fd7e14', callback: v => '$' + v }, grid: { display: false } }
+                    },
+                    plugins: { legend: { labels: { color: '#212529' } } }
+                }
+            });
+
+            if (cumulativeChart) cumulativeChart.destroy();
+            cumulativeChart = new Chart(document.getElementById('cumulativeChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels, datasets: [
+                    { label: 'Principal Paid', data: cumPrin, backgroundColor: 'rgba(25, 135, 84, 0.8)' },
+                    { label: 'Interest Paid', data: cumInt, backgroundColor: 'rgba(220, 53, 69, 0.8)' }
+                ]},
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, ticks: { color: '#6c757d' }, grid: { color: '#e9ecef' } },
+                        y: { stacked: true, ticks: { color: '#6c757d', callback: v => '$' + v }, grid: { color: '#e9ecef' } }
+                    },
+                    plugins: { legend: { labels: { color: '#212529' } } }
+                }
+            });
+        }
+
+        function updateWhatIfScenarios(currentPayment, currentPlan) {
+            const currentMonths = currentPlan.totalPeriods;
+            const currentInterest = currentPlan.totalInterest;
+            const currentTotal = currentPlan.totalPaid;
+            const minPayment = calculateMinimumPayment(state.currentBalance);
+
+            // ===== PAY MORE =====
+            const whatIfPayment = parseFloat(document.getElementById('whatIfPayment').value) || 50;
+            const newPlan = calculateAmortization(state.currentBalance, state.apr, whatIfPayment, state.frequency);
+            const newMonths = newPlan.totalPeriods;
+            const newInterest = newPlan.totalInterest;
+            
+            const intSaved = Math.max(0, currentInterest - newInterest);
+            const moSaved = Math.max(0, currentMonths - newMonths);
+
+            document.getElementById('wiPayMoreMinPmt').textContent = `${formatCurrency(minPayment)}/mo`;
+            document.getElementById('wiPayMoreCurrentMonths').textContent = `${currentMonths} mo, ${formatCurrency(currentInterest)} int`;
+            document.getElementById('wiPayMoreNewMonths').textContent = `${newMonths} mo, ${formatCurrency(newInterest)} int`;
+            document.getElementById('wiPayMoreSavings').textContent = intSaved > 0 || moSaved > 0 
+                ? `${formatCurrency(intSaved)} + ${moSaved} months` 
+                : 'Same as current plan';
+
+            const maxMo1 = Math.max(currentMonths, newMonths, 1);
+            document.getElementById('wiPayMoreBarCurrent').style.width = `${(currentMonths / maxMo1) * 100}%`;
+            document.getElementById('wiPayMoreBarCurrentText').textContent = `${currentMonths} mo`;
+            document.getElementById('wiPayMoreBarNew').style.width = `${Math.max(15, (newMonths / maxMo1) * 100)}%`;
+            document.getElementById('wiPayMoreBarNewText').textContent = `${newMonths} mo`;
+
+            // ===== SKIP PAYMENT - Simpler, more direct calculation =====
+            const skipCount = parseInt(document.getElementById('whatIfSkip').value) || 1;
+            const lateFees = skipCount * LATE_FEE;
+            const interestDuringSkip = skipCount * calculateMonthlyInterest(state.currentBalance, state.apr);
+            const immediateExtraCost = lateFees + interestDuringSkip;
+            const newBalanceAfterSkip = state.currentBalance + immediateExtraCost;
+            
+            // Show immediate cost, not lifetime projections which are confusing
+            document.getElementById('wiSkipFees').textContent = formatCurrency(lateFees);
+            document.getElementById('wiSkipInterestDuring').textContent = formatCurrency(interestDuringSkip);
+            document.getElementById('wiSkipNewBalance').textContent = formatCurrency(newBalanceAfterSkip);
+            document.getElementById('wiSkipCurrentInt').textContent = formatCurrency(state.currentBalance);
+            document.getElementById('wiSkipNewInt').textContent = formatCurrency(newBalanceAfterSkip);
+            document.getElementById('wiSkipExtraCost').textContent = `+${formatCurrency(immediateExtraCost)}`;
+
+            // Bars show balance comparison
+            const maxBal = Math.max(state.currentBalance, newBalanceAfterSkip);
+            document.getElementById('wiSkipBarCurrent').style.width = `${(state.currentBalance / maxBal) * 100}%`;
+            document.getElementById('wiSkipBarCurrentText').textContent = `${formatCurrency(state.currentBalance)}`;
+            document.getElementById('wiSkipBarNew').style.width = `${(newBalanceAfterSkip / maxBal) * 100}%`;
+            document.getElementById('wiSkipBarNewText').textContent = `${formatCurrency(newBalanceAfterSkip)}`;
+
+            // ===== APR INCREASE =====
+            const whatIfAPR = parseFloat(document.getElementById('whatIfAPR').value) || 29;
+            const monthlyInterestAtNewAPR = state.currentBalance * (whatIfAPR / 100 / 12);
+            const paymentCoversInterest = currentPayment >= monthlyInterestAtNewAPR;
+            
+            if (paymentCoversInterest) {
+                const aprPlan = calculateAmortization(state.currentBalance, whatIfAPR, currentPayment, state.frequency);
+                const aprExtraInt = Math.max(0, aprPlan.totalInterest - currentInterest);
+                const aprExtraMo = Math.max(0, aprPlan.totalPeriods - currentMonths);
+
+                document.getElementById('wiAPRCurrent').textContent = `${state.apr}%`;
+                document.getElementById('wiAPRCurrentInt').textContent = formatCurrency(currentInterest);
+                document.getElementById('wiAPRNewInterest').textContent = formatCurrency(aprPlan.totalInterest);
+                document.getElementById('wiAPRNewMonths').textContent = `${aprPlan.totalPeriods} months`;
+                document.getElementById('wiAPRExtraCost').textContent = `+${formatCurrency(aprExtraInt)} + ${aprExtraMo} mo`;
+
+                const maxInt = Math.max(currentInterest, aprPlan.totalInterest);
+                document.getElementById('wiAPRBarCurrent').style.width = `${(currentInterest / maxInt) * 100}%`;
+                document.getElementById('wiAPRBarCurrentText').textContent = `${formatCurrency(currentInterest)} int`;
+                document.getElementById('wiAPRBarNew').style.width = `${(aprPlan.totalInterest / maxInt) * 100}%`;
+                document.getElementById('wiAPRBarNewText').textContent = `${formatCurrency(aprPlan.totalInterest)} int`;
+            } else {
+                // Payment doesn't cover interest - show warning
+                document.getElementById('wiAPRCurrent').textContent = `${state.apr}%`;
+                document.getElementById('wiAPRCurrentInt').textContent = formatCurrency(currentInterest);
+                document.getElementById('wiAPRNewInterest').textContent = `⚠️ ${formatCurrency(monthlyInterestAtNewAPR)}/mo interest`;
+                document.getElementById('wiAPRNewMonths').textContent = `Payment too low!`;
+                document.getElementById('wiAPRExtraCost').textContent = `Debt grows forever`;
+
+                document.getElementById('wiAPRBarCurrent').style.width = `100%`;
+                document.getElementById('wiAPRBarCurrentText').textContent = `${formatCurrency(currentPayment)}/mo payment`;
+                document.getElementById('wiAPRBarNew').style.width = `100%`;
+                document.getElementById('wiAPRBarNew').classList.remove('worse');
+                document.getElementById('wiAPRBarNew').classList.add('worse');
+                document.getElementById('wiAPRBarNewText').textContent = `${formatCurrency(monthlyInterestAtNewAPR)}/mo interest`;
+            }
+        }
+
+        function updateFooter(currentPayment, currentPlan) {
+            const extraTenPlan = calculateAmortization(state.currentBalance, state.apr, currentPayment + 10, state.frequency);
+            document.getElementById('extraTenSavings').textContent = formatCurrency(Math.max(0, currentPlan.totalInterest - extraTenPlan.totalInterest));
+            document.getElementById('extraTenMonths').textContent = Math.max(0, currentPlan.totalPeriods - extraTenPlan.totalPeriods);
+        }
+
+        // ============ MODAL ============
+        function showMissPaymentModal() {
+            const monthlyInterest = calculateMonthlyInterest(state.currentBalance, state.apr);
+            document.getElementById('modalInterest').textContent = `~${formatCurrency(monthlyInterest)}`;
+            document.getElementById('modalAddedBalance').textContent = formatCurrency(LATE_FEE + monthlyInterest);
+            const remaining = 3 - state.consecutiveMissed;
+            document.getElementById('modalWarning').innerHTML = remaining === 1 
+                ? '🚨 <strong>WARNING:</strong> This will be your 3rd consecutive miss! Penalty APR of 29.99% will activate!'
+                : `⚠️ ${remaining - 1} more consecutive missed payment(s) will trigger penalty APR of 29.99%!`;
+            document.getElementById('missPaymentModal').classList.add('active');
+        }
+
+        function hideMissPaymentModal() { document.getElementById('missPaymentModal').classList.remove('active'); }
+
+        function simulateMissedPayment() {
+            state.missedPayments++;
+            state.consecutiveMissed++;
+            state.currentBalance += LATE_FEE + calculateMonthlyInterest(state.currentBalance, state.apr);
+            if (state.consecutiveMissed >= 3 && !state.penaltyAprActive) {
+                state.penaltyAprActive = true;
+                state.apr = PENALTY_APR;
+                document.getElementById('aprPenaltyWarning').classList.add('active');
+            }
+            document.getElementById('missedIndicator').classList.add('active');
+            document.getElementById('missedCount').textContent = state.missedPayments;
+            document.getElementById('missedWarning').textContent = state.penaltyAprActive 
+                ? 'Penalty APR (29.99%) is now active!' 
+                : `${3 - state.consecutiveMissed} more consecutive miss(es) until penalty APR`;
+            hideMissPaymentModal();
+            updateDisplay();
+        }
+
+        function resetSimulation() {
+            state.currentBalance = ORIGINAL_BALANCE;
+            state.missedPayments = 0;
+            state.consecutiveMissed = 0;
+            state.penaltyAprActive = false;
+            state.apr = state.baseApr;
+            document.getElementById('missedIndicator').classList.remove('active');
+            document.getElementById('aprPenaltyWarning').classList.remove('active');
+            updateDisplay();
+        }
+
+        // ============ LEDGER ============
+        function loadLedger() {
+            const saved = localStorage.getItem('creditCardLedger');
+            if (saved) { ledger = JSON.parse(saved); updateLedgerDisplay(); }
+        }
+
+        function saveLedger() { localStorage.setItem('creditCardLedger', JSON.stringify(ledger)); }
+
+        function addPayment() {
+            const date = document.getElementById('paymentDate').value;
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+            if (!date || !amount || amount <= 0) { alert('Please enter a valid date and amount.'); return; }
+
+            const lastDate = ledger.payments.length > 0 ? new Date(ledger.payments[ledger.payments.length - 1].date) : new Date();
+            const currentDate = new Date(date);
+            const daysDiff = Math.max(0, (currentDate - lastDate) / (1000 * 60 * 60 * 24));
+            const interestAccrued = ledger.currentBalance * (state.apr / 100 / 365) * daysDiff;
+            const interestPortion = Math.min(amount, interestAccrued);
+            const principalPortion = Math.max(0, amount - interestPortion);
+
+            ledger.currentBalance = Math.max(0, ledger.currentBalance + interestAccrued - amount);
+            ledger.totalPaid += amount;
+            ledger.totalInterest += interestAccrued;
+
+            ledger.payments.push({
+                id: Date.now(), date, amount, type: document.getElementById('paymentType').value,
+                interestAccrued, interestPaid: interestPortion, principalPaid: principalPortion,
+                balance: ledger.currentBalance, note: document.getElementById('paymentNote').value
+            });
+
+            document.getElementById('paymentAmount').value = '';
+            document.getElementById('paymentNote').value = '';
+            saveLedger();
+            updateLedgerDisplay();
+        }
+
+        function deletePayment(id) {
+            if (!confirm('Delete this payment? Balances will be recalculated.')) return;
+            ledger.payments = ledger.payments.filter(p => p.id !== id);
+            recalculateLedger();
+            saveLedger();
+            updateLedgerDisplay();
+        }
+
+        function recalculateLedger() {
+            ledger.currentBalance = ledger.startingBalance;
+            ledger.totalPaid = 0;
+            ledger.totalInterest = 0;
+            let lastDate = new Date();
+            ledger.payments.forEach((payment, index) => {
+                const currentDate = new Date(payment.date);
+                const daysDiff = index === 0 ? 0 : Math.max(0, (currentDate - lastDate) / (1000 * 60 * 60 * 24));
+                const interestAccrued = ledger.currentBalance * (state.apr / 100 / 365) * daysDiff;
+                const interestPortion = Math.min(payment.amount, interestAccrued);
+                const principalPortion = Math.max(0, payment.amount - interestPortion);
+                ledger.currentBalance = Math.max(0, ledger.currentBalance + interestAccrued - payment.amount);
+                ledger.totalPaid += payment.amount;
+                ledger.totalInterest += interestAccrued;
+                payment.interestAccrued = interestAccrued;
+                payment.interestPaid = interestPortion;
+                payment.principalPaid = principalPortion;
+                payment.balance = ledger.currentBalance;
+                lastDate = currentDate;
+            });
+        }
+
+        function updateLedgerDisplay() {
+            document.getElementById('ledgerBalance').textContent = formatCurrencyDecimal(ledger.currentBalance);
+            document.getElementById('ledgerTotalPaid').textContent = formatCurrencyDecimal(ledger.totalPaid);
+            document.getElementById('ledgerInterest').textContent = formatCurrencyDecimal(ledger.totalInterest);
+            document.getElementById('ledgerPaymentCount').textContent = ledger.payments.length;
+
+            const table = document.getElementById('ledgerTable');
+            const emptyState = document.getElementById('emptyState');
+            const tbody = document.getElementById('ledgerBody');
+
+            if (ledger.payments.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+
+            tbody.innerHTML = ledger.payments.map(p => `
+                <tr>
+                    <td>${new Date(p.date).toLocaleDateString()}</td>
+                    <td>${p.type.charAt(0).toUpperCase() + p.type.slice(1)}</td>
+                    <td class="amount-positive">${formatCurrencyDecimal(p.amount)}</td>
+                    <td class="amount-positive">${formatCurrencyDecimal(p.principalPaid)}</td>
+                    <td class="amount-negative">${formatCurrencyDecimal(p.interestPaid)}</td>
+                    <td>${formatCurrencyDecimal(p.balance)}</td>
+                    <td>${p.note || '-'}</td>
+                    <td><button class="delete-btn" data-id="${p.id}">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // ============ EVENT LISTENERS ============
+        document.getElementById('aprSlider').addEventListener('input', (e) => {
+            if (!state.penaltyAprActive) { state.apr = parseFloat(e.target.value); state.baseApr = state.apr; }
+            updateDisplay();
+        });
+
+        document.getElementById('extraPayment').addEventListener('input', (e) => {
+            state.extraPayment = parseFloat(e.target.value) || 0;
+            updateDisplay();
+        });
+
+        document.querySelectorAll('.toggle-btn[data-frequency]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.toggle-btn[data-frequency]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                state.frequency = e.target.dataset.frequency;
+                updateDisplay();
+            });
+        });
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(`${e.target.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+
+        document.getElementById('aprToggle').addEventListener('click', function() {
+            this.classList.toggle('expanded');
+            document.getElementById('aprControl').classList.toggle('visible');
+        });
+
+        document.getElementById('missPaymentBtn').addEventListener('click', showMissPaymentModal);
+        document.getElementById('modalCancel').addEventListener('click', hideMissPaymentModal);
+        document.getElementById('modalConfirm').addEventListener('click', simulateMissedPayment);
+        document.getElementById('resetMissed').addEventListener('click', resetSimulation);
+        document.getElementById('missPaymentModal').addEventListener('click', (e) => { if (e.target.id === 'missPaymentModal') hideMissPaymentModal(); });
+
+        ['whatIfPayment', 'whatIfSkip', 'whatIfAPR'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                const minPayment = calculateMinimumPayment(state.currentBalance);
+                const totalPayment = minPayment + state.extraPayment;
+                const currentPlan = calculateAmortization(state.currentBalance, state.apr, totalPayment, state.frequency);
+                updateWhatIfScenarios(totalPayment, currentPlan);
+            });
+        });
+
+        document.getElementById('addPaymentBtn').addEventListener('click', addPayment);
+        document.getElementById('paymentDate').valueAsDate = new Date();
+
+        // Make a Payment link - switch to ledger tab
+        document.getElementById('makePaymentLink').addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector('.tab-btn[data-tab="ledger"]').classList.add('active');
+            document.getElementById('ledger-tab').classList.add('active');
+        });
+
+        // Apply Plan button - update current plan with What If payment
+        document.getElementById('applyPlanBtn').addEventListener('click', () => {
+            const whatIfPayment = parseFloat(document.getElementById('whatIfPayment').value) || 30;
+            const minPayment = calculateMinimumPayment(state.currentBalance);
+            state.extraPayment = Math.max(0, whatIfPayment - minPayment);
+            document.getElementById('extraPayment').value = state.extraPayment;
+            updateDisplay();
+            // Scroll to top to see updated plan
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Event delegation for delete buttons
+        document.getElementById('ledgerBody').addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const id = parseInt(e.target.dataset.id);
+                deletePayment(id);
+            }
+        });
+
+        // ============ INIT ============
+        loadLedger();
+        // Set What If payment input to minimum payment
+        document.getElementById('whatIfPayment').value = calculateMinimumPayment(state.currentBalance);
+        updateDisplay();
+    </script>
+</body>
+</html>
